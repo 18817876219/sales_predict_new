@@ -4,9 +4,17 @@ import numpy as np
 from collections import Counter
 import time
 import xgboost as xgb
-import common.utils as utils
 from matplotlib import pyplot as plt
 from sklearn.model_selection import KFold, train_test_split, GridSearchCV
+
+# 相对误差
+def calc_relative_error(y_pred, y_true):
+    return np.mean(np.abs(np.nan_to_num((y_pred - y_true) * 1.0 / y_true)))
+
+# 均方根误差(标准误差)
+def calc_root_mean_square_error(y_pred, y_true):
+    return np.sqrt(sum((y_pred - y_true)**2) / len(y_true))
+
 
 X = pd.read_csv('../feature/X.csv')
 Y = pd.read_csv('../feature/Y.csv')
@@ -42,10 +50,10 @@ for train_index, test_index in kfold.split(X):
     XGBR.fit(X.values[train_index], (Y.values[train_index])[:,0])
     predictions = XGBR.predict(X.values[test_index])
     actuals = (Y.values[test_index])[:,0]
-    print("rmse:",utils.calc_root_mean_square_error(predictions, actuals))
-    print("acc",1-utils.calc_relative_error(predictions, actuals))
-    rmse.append(utils.calc_root_mean_square_error(predictions, actuals))
-    acc.append(1-utils.calc_relative_error(predictions, actuals))
+    print("rmse:",calc_root_mean_square_error(predictions, actuals))
+    print("acc",1-calc_relative_error(predictions, actuals))
+    rmse.append(calc_root_mean_square_error(predictions, actuals))
+    acc.append(1-calc_relative_error(predictions, actuals))
 
     imp_dict = get_xgb_imp(XGBR, X.columns.values)
     dict_merge = dict(Counter(dict_merge)+Counter(imp_dict))
